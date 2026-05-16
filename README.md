@@ -1,6 +1,6 @@
-# Sistema de Auditoría GLOBALG.A.P.
+# Lista de Chequeo GLOBALG.A.P.
 
-App en Streamlit para completar una auditoría basada en un Excel fijo.
+App en Streamlit para completar una lista de chequeo basada en un Excel fijo.
 
 ## Archivos
 
