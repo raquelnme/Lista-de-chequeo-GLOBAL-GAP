@@ -266,7 +266,16 @@ st.markdown("### Criterios de auditoría")
 if df_filtrado.empty:
     st.warning("No hay criterios que coincidan con los filtros.")
 else:
+    subseccion_anterior = None
     for idx, row in df_filtrado.iterrows():
+
+    if row["subseccion"] != subseccion_anterior:
+        st.markdown("---")
+        st.subheader(
+            f'{row["subseccion"]} — {row["titulo_subseccion"]}'
+        )
+        subseccion_anterior = row["subseccion"]
+        
         titulo = f"{row['seccion']} — {row['principio']}"
 
         with st.expander(titulo, expanded=False):
