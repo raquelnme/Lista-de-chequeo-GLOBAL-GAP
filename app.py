@@ -211,7 +211,7 @@ with st.sidebar:
     capitulos = sorted(df["seccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
     niveles = sorted(df["nivel"].dropna().unique())
 
-    capitulo = st.selectbox("Capítulo", ["Todos"] + capitulos)
+    capitulos = sorted(df["subseccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
     nivel = st.selectbox("Nivel", ["Todos"] + niveles)
     estado = st.selectbox(
         "Estado",
@@ -228,7 +228,7 @@ with st.sidebar:
 filtro = pd.Series(True, index=df.index)
 
 if capitulo != "Todos":
-    filtro &= df["seccion"].str.startswith(capitulo, na=False)
+    filtro &= df["subseccion"].str.startswith(capitulo, na=False)
 
 if nivel != "Todos":
     filtro &= df["nivel"].eq(nivel)
