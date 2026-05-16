@@ -183,7 +183,7 @@ def exportar_excel(df: pd.DataFrame) -> bytes:
     return final_output.getvalue()
 
 
-st.title("Sistema de Auditoría GLOBALG.A.P.")
+st.title("Lista de Chequeo GLOBAL GAP")
 st.caption("Plantilla digital para completar criterios de auditoría y exportar resultados.")
 
 if "auditoria_df" not in st.session_state:
