@@ -269,12 +269,12 @@ else:
     subseccion_anterior = None
     for idx, row in df_filtrado.iterrows():
 
-    if row["subseccion"] != subseccion_anterior:
-        st.markdown("---")
-        st.subheader(
-            f'{row["subseccion"]} — {row["titulo_subseccion"]}'
-        )
-        subseccion_anterior = row["subseccion"]
+        if row["subseccion"] != subseccion_anterior:
+            st.markdown("---")
+            st.subheader(
+                f'{row["subseccion"]} — {row["titulo_subseccion"]}'
+            )
+            subseccion_anterior = row["subseccion"]
         
         titulo = f"{row['seccion']} — {row['principio']}"
 
