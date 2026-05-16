@@ -59,8 +59,8 @@ def cargar_base() -> pd.DataFrame:
     registros = []
     actual = None
 
-    patron_criterio = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}$")
-    patron_capitulo = re.compile(r"^FV-GFS\s+\d{2}(\.0)?$")
+    patron_criterio = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}\.\d{2}$")
+    patron_capitulo = re.compile(r"^FV-GFS\s+\d{2}(\.\d{2})?$")
 
     for _, row in df.iterrows():
         seccion = limpiar_texto(row["seccion"])
