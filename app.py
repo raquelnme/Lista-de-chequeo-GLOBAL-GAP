@@ -15,7 +15,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-EXCEL_BASE = "norma_globalgap.xlsx"
+EXCEL_BASE = "norma.xlsx"
 
 
 def normalizar_columnas(df: pd.DataFrame) -> pd.DataFrame:
