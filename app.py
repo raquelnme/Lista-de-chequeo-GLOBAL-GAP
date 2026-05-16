@@ -22,13 +22,13 @@ def normalizar_columnas(df: pd.DataFrame) -> pd.DataFrame:
     mapa = {}
     for col in df.columns:
         c = str(col).strip().lower()
-        if c in ["sección", "seccion"]:
+        if c in ["Sección", "seccion"]:
             mapa[col] = "seccion"
-        elif c in ["principio"]:
+        elif c in ["Principio"]:
             mapa[col] = "principio"
-        elif c in ["criterios", "criterio"]:
+        elif c in ["Criterios", "criterio"]:
             mapa[col] = "criterio"
-        elif c in ["nivel"]:
+        elif c in ["Nivel"]:
             mapa[col] = "nivel"
 
     df = df.rename(columns=mapa)
@@ -81,7 +81,7 @@ def cargar_base() -> pd.DataFrame:
                 "estado": "",
                 "metodo de auditoria": "",
                 "evidencia": "",
-                "comentarios u observaciones": "",
+                "comentarios": "",
             }
 
         elif actual is not None and seccion == "" and principio == "" and criterio != "":
@@ -122,7 +122,7 @@ def exportar_excel(df: pd.DataFrame) -> bytes:
         "estado",
         "metodo de auditoria",
         "evidencia",
-        "comentarios u observaciones",
+        "comentarios",
     ]
 
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
