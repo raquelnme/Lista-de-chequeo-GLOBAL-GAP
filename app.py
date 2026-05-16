@@ -417,7 +417,7 @@ excel_bytes = exportar_excel(st.session_state.auditoria_df)
 fecha = datetime.now().strftime("%Y%m%d_%H%M")
 
 st.download_button(
-    label="Descargar auditoría completada en Excel",
+    label="Descargar lista de chequeo en Excel",
     data=excel_bytes,
     file_name=f"lista_chequeo_globalgap_completada_{fecha}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
