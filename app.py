@@ -1,4 +1,3 @@
-
 import io
 import re
 from datetime import datetime
@@ -58,17 +57,20 @@ def cargar_base() -> pd.DataFrame:
 
     registros = []
     actual = None
+
+    capitulo_actual = ""
+    titulo_capitulo_actual = ""
     subseccion_actual = ""
     titulo_subseccion_actual = ""
 
-    # criterio real (ej. FV-GFS 33.07.01)
-    patron_criterio = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}\.\d{2}$")
+    # Capítulo principal: FV-GFS 33
+    patron_capitulo = re.compile(r"^FV-GFS\s+\d{2}$")
 
-    # subsección (ej. FV-GFS 33.07)
+    # Subsección: FV-GFS 33.07
     patron_subseccion = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}$")
 
-    # capítulo principal (ej. FV-GFS 33)
-    patron_capitulo = re.compile(r"^FV-GFS\s+\d{2}$")
+    # Criterio auditable real: FV-GFS 33.07.01
+    patron_criterio = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}\.\d{2}$")
 
     for _, row in df.iterrows():
         seccion = limpiar_texto(row["seccion"])
@@ -76,15 +78,43 @@ def cargar_base() -> pd.DataFrame:
         criterio = limpiar_texto(row["criterio"])
         nivel = limpiar_texto(row["nivel"])
 
-        if patron_criterio.match(seccion):
+        # Capítulo principal, solo sirve como referencia visual/filtro
+        if patron_capitulo.match(seccion):
+            if actual is not None:
+                registros.append(actual)
+                actual = None
+
+            capitulo_actual = seccion
+            titulo_capitulo_actual = principio
+            subseccion_actual = ""
+            titulo_subseccion_actual = ""
+            continue
+
+        # Subsección, no se llena; solo agrupa criterios
+        if patron_subseccion.match(seccion):
+            if actual is not None:
+                registros.append(actual)
+                actual = None
+
             subseccion_actual = seccion
             titulo_subseccion_actual = principio
             continue
-            
+
+        # Criterio auditable real
+        if patron_criterio.match(seccion):
             if actual is not None:
                 registros.append(actual)
 
+            # Si no se detectó subsección antes, se infiere a partir del código del criterio
+            subseccion_inferida = ".".join(seccion.split(".")[:2])
+            subseccion_para_registro = subseccion_actual or subseccion_inferida
+            titulo_subseccion_para_registro = titulo_subseccion_actual or "Sin subsección"
+
             actual = {
+                "capitulo": capitulo_actual,
+                "titulo_capitulo": titulo_capitulo_actual,
+                "subseccion": subseccion_para_registro,
+                "titulo_subseccion": titulo_subseccion_para_registro,
                 "seccion": seccion,
                 "principio": principio,
                 "criterio": criterio,
@@ -94,22 +124,43 @@ def cargar_base() -> pd.DataFrame:
                 "metodo de auditoria": "",
                 "evidencia": "",
                 "comentarios": "",
-                "subseccion": subseccion_actual,
-                "titulo_subseccion": titulo_subseccion_actual,
             }
+            continue
 
-        elif actual is not None and seccion == "" and principio == "" and criterio != "":
+        # Continuación de un criterio largo en una fila posterior
+        if actual is not None and seccion == "" and principio == "" and criterio != "":
             actual["criterio"] = (actual["criterio"] + "\n" + criterio).strip()
             if nivel and not actual["nivel"]:
                 actual["nivel"] = nivel
-
-        elif patron_capitulo.match(seccion):
             continue
 
     if actual is not None:
         registros.append(actual)
 
-    return pd.DataFrame(registros)
+    base = pd.DataFrame(registros)
+
+    columnas = [
+        "capitulo",
+        "titulo_capitulo",
+        "subseccion",
+        "titulo_subseccion",
+        "seccion",
+        "principio",
+        "criterio",
+        "nivel",
+        "cumplimiento",
+        "estado",
+        "metodo de auditoria",
+        "evidencia",
+        "comentarios",
+    ]
+
+    # Garantiza que aunque no se encuentre nada, el DataFrame tenga columnas válidas
+    for col in columnas:
+        if col not in base.columns:
+            base[col] = ""
+
+    return base[columnas]
 
 
 def calcular_resumen(df: pd.DataFrame):
@@ -128,6 +179,10 @@ def exportar_excel(df: pd.DataFrame) -> bytes:
     output = io.BytesIO()
 
     columnas = [
+        "capitulo",
+        "titulo_capitulo",
+        "subseccion",
+        "titulo_subseccion",
         "seccion",
         "principio",
         "criterio",
@@ -157,15 +212,19 @@ def exportar_excel(df: pd.DataFrame) -> bytes:
         cell.border = Border(bottom=thin)
 
     widths = {
-        "A": 16,
-        "B": 45,
-        "C": 90,
-        "D": 20,
-        "E": 18,
-        "F": 18,
-        "G": 35,
-        "H": 35,
-        "I": 45,
+        "A": 16,  # capitulo
+        "B": 35,  # titulo_capitulo
+        "C": 18,  # subseccion
+        "D": 35,  # titulo_subseccion
+        "E": 18,  # seccion/criterio
+        "F": 45,  # principio
+        "G": 90,  # criterio
+        "H": 20,  # nivel
+        "I": 18,  # cumplimiento
+        "J": 18,  # estado
+        "K": 35,  # metodo
+        "L": 35,  # evidencia
+        "M": 45,  # comentarios
     }
 
     for col, width in widths.items():
@@ -176,14 +235,15 @@ def exportar_excel(df: pd.DataFrame) -> bytes:
             cell.alignment = Alignment(vertical="top", wrap_text=True)
             cell.border = Border(bottom=thin)
 
-        estado = str(row[5].value).strip().lower()
+        # Columna J = estado
+        estado = str(row[9].value).strip().lower()
 
         if estado == "sí lo cumplo":
-            row[5].fill = PatternFill("solid", fgColor="C6EFCE")
+            row[9].fill = PatternFill("solid", fgColor="C6EFCE")
         elif estado == "no lo cumplo":
-            row[5].fill = PatternFill("solid", fgColor="FFC7CE")
+            row[9].fill = PatternFill("solid", fgColor="FFC7CE")
         elif estado == "no aplica":
-            row[5].fill = PatternFill("solid", fgColor="D9D9D9")
+            row[9].fill = PatternFill("solid", fgColor="D9D9D9")
 
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = ws.dimensions
@@ -205,13 +265,22 @@ if "auditoria_df" not in st.session_state:
 
 df = st.session_state.auditoria_df
 
+if df.empty:
+    st.error(
+        "No se detectaron criterios auditables. Revisa que el Excel tenga códigos con formato "
+        "FV-GFS XX.XX.XX en la columna Sección."
+    )
+    st.stop()
+
 with st.sidebar:
     st.header("Filtros")
 
-    capitulos = sorted(df["subseccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
+    capitulos = sorted(df["capitulo"].dropna().unique())
+    subsecciones = sorted(df["subseccion"].dropna().unique())
     niveles = sorted(df["nivel"].dropna().unique())
 
-    capitulos = sorted(df["subseccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
+    capitulo = st.selectbox("Capítulo", ["Todos"] + capitulos)
+    subseccion = st.selectbox("Subsección", ["Todos"] + subsecciones)
     nivel = st.selectbox("Nivel", ["Todos"] + niveles)
     estado = st.selectbox(
         "Estado",
@@ -228,7 +297,10 @@ with st.sidebar:
 filtro = pd.Series(True, index=df.index)
 
 if capitulo != "Todos":
-    filtro &= df["subseccion"].str.startswith(capitulo, na=False)
+    filtro &= df["capitulo"].eq(capitulo)
+
+if subseccion != "Todos":
+    filtro &= df["subseccion"].eq(subseccion)
 
 if nivel != "Todos":
     filtro &= df["nivel"].eq(nivel)
@@ -241,7 +313,11 @@ elif estado != "Todos":
 if busqueda.strip():
     b = busqueda.strip().lower()
     filtro &= (
-        df["seccion"].str.lower().str.contains(b, na=False)
+        df["capitulo"].str.lower().str.contains(b, na=False)
+        | df["titulo_capitulo"].str.lower().str.contains(b, na=False)
+        | df["subseccion"].str.lower().str.contains(b, na=False)
+        | df["titulo_subseccion"].str.lower().str.contains(b, na=False)
+        | df["seccion"].str.lower().str.contains(b, na=False)
         | df["principio"].str.lower().str.contains(b, na=False)
         | df["criterio"].str.lower().str.contains(b, na=False)
     )
@@ -267,15 +343,15 @@ if df_filtrado.empty:
     st.warning("No hay criterios que coincidan con los filtros.")
 else:
     subseccion_anterior = None
-    for idx, row in df_filtrado.iterrows():
 
-        if row["subseccion"] != subseccion_anterior:
+    for idx, row in df_filtrado.iterrows():
+        etiqueta_subseccion = f'{row["subseccion"]} — {row["titulo_subseccion"]}'
+
+        if etiqueta_subseccion != subseccion_anterior:
             st.markdown("---")
-            st.subheader(
-                f'{row["subseccion"]} — {row["titulo_subseccion"]}'
-            )
-            subseccion_anterior = row["subseccion"]
-        
+            st.subheader(etiqueta_subseccion)
+            subseccion_anterior = etiqueta_subseccion
+
         titulo = f"{row['seccion']} — {row['principio']}"
 
         with st.expander(titulo, expanded=False):
@@ -343,6 +419,6 @@ fecha = datetime.now().strftime("%Y%m%d_%H%M")
 st.download_button(
     label="Descargar auditoría completada en Excel",
     data=excel_bytes,
-    file_name=f"auditoria_globalgap_completada_{fecha}.xlsx",
+    file_name=f"lista_chequeo_globalgap_completada_{fecha}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
