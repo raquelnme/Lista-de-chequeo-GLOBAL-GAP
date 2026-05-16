@@ -304,8 +304,8 @@ else:
             )
 
             df.at[idx, "comentarios"] = st.text_area(
-                "Comentarios u observaciones",
-                value=df.at[idx, "comentarios u observaciones"],
+                "Comentarios",
+                value=df.at[idx, "comentarios"],
                 height=90,
                 key=f"obs_{idx}"
             )
