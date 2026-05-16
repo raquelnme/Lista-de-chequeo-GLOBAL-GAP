@@ -22,13 +22,13 @@ def normalizar_columnas(df: pd.DataFrame) -> pd.DataFrame:
     mapa = {}
     for col in df.columns:
         c = str(col).strip().lower()
-        if c in ["Sección", "seccion"]:
+        if c in ["sección", "seccion"]:
             mapa[col] = "seccion"
-        elif c in ["Principio"]:
+        elif c in ["principio"]:
             mapa[col] = "principio"
-        elif c in ["Criterios", "criterio"]:
+        elif c in ["criterios", "criterio"]:
             mapa[col] = "criterio"
-        elif c in ["Nivel"]:
+        elif c in ["nivel"]:
             mapa[col] = "nivel"
 
     df = df.rename(columns=mapa)
