@@ -303,7 +303,7 @@ else:
                 key=f"evidencia_{idx}"
             )
 
-            df.at[idx, "comentarios u observaciones"] = st.text_area(
+            df.at[idx, "comentarios"] = st.text_area(
                 "Comentarios u observaciones",
                 value=df.at[idx, "comentarios u observaciones"],
                 height=90,
