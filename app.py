@@ -58,9 +58,17 @@ def cargar_base() -> pd.DataFrame:
 
     registros = []
     actual = None
+    subseccion_actual = ""
+    titulo_subseccion_actual = ""
 
+    # criterio real (ej. FV-GFS 33.07.01)
     patron_criterio = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}\.\d{2}$")
-    patron_capitulo = re.compile(r"^FV-GFS\s+\d{2}(\.\d{2})?$")
+
+    # subsección (ej. FV-GFS 33.07)
+    patron_subseccion = re.compile(r"^FV-GFS\s+\d{2}\.\d{2}$")
+
+    # capítulo principal (ej. FV-GFS 33)
+    patron_capitulo = re.compile(r"^FV-GFS\s+\d{2}$")
 
     for _, row in df.iterrows():
         seccion = limpiar_texto(row["seccion"])
@@ -69,6 +77,10 @@ def cargar_base() -> pd.DataFrame:
         nivel = limpiar_texto(row["nivel"])
 
         if patron_criterio.match(seccion):
+            subseccion_actual = seccion
+            titulo_subseccion_actual = principio
+            continue
+            
             if actual is not None:
                 registros.append(actual)
 
@@ -82,6 +94,8 @@ def cargar_base() -> pd.DataFrame:
                 "metodo de auditoria": "",
                 "evidencia": "",
                 "comentarios": "",
+                "subseccion": subseccion_actual,
+                "titulo_subseccion": titulo_subseccion_actual,
             }
 
         elif actual is not None and seccion == "" and principio == "" and criterio != "":
