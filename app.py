@@ -10,7 +10,7 @@ from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
 
 
 st.set_page_config(
-    page_title="Auditoría GLOBALG.A.P.",
+    page_title="Lista de Chequeo GLOBAL GAP",
     layout="wide",
     initial_sidebar_state="expanded"
 )
