@@ -208,7 +208,7 @@ df = st.session_state.auditoria_df
 with st.sidebar:
     st.header("Filtros")
 
-    capitulos = sorted(df["seccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
+    capitulos = sorted(df["subseccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
     niveles = sorted(df["nivel"].dropna().unique())
 
     capitulos = sorted(df["subseccion"].str.extract(r"(FV-GFS\s+\d{2})")[0].dropna().unique())
